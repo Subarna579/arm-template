@@ -1,0 +1,112 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "rgName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the Resource Group to create. If not provided, a default name with UTC timestamp will be generated."
+      },
+      "defaultValue": ""
+    },
+    "region_Cleanroom": {
+      "type": "string",
+      "defaultValue": "East US",
+      "metadata": {
+        "description": "Region for the CleanRoom"
+      }
+    },
+    "virtualNetworks_Cleanroom_Infra_vNet_name": {
+      "type": "string",
+      "defaultValue": "Cleanroom-Infra-vNet",
+      "metadata": {
+        "description": "CleanRoom Infra Virtual Net Name"
+      }
+    },
+    "virtualNetworks_Cleanroom_Isolated_vNet_name": {
+      "defaultValue": "Cleanroom-Isolated-vNet",
+      "type": "String",
+      "metadata":{
+        "description": "Cleanroom Isolated Virtual Net Name"
+      }
+    },
+    "storageAccounts_cvltcleanroomstorageacc_name": {
+      "defaultValue": "storageacc",
+      "type": "String",
+      "metadata":{
+        "description": "Cleanroom storage account name used to create a unique storage account name"
+      }
+    },
+    "networkSecurityGroups_Cleanroom_Infra_NSG_name": {
+      "defaultValue": "Cleanroom-Infra-NSG",
+      "type": "String",
+      "metadata":{
+        "description": "Cleanroom Infra Network Security Group Name"
+      }
+    },
+    "networkSecurityGroups_Cleanroom_Isolated_NSG_name": {
+      "defaultValue": "Cleanroom-Isolated-NSG",
+      "type": "String",
+      "metadata":{
+        "description": "Cleanroom Isolated Network Security Group Name"
+      }
+    },
+    "currentTime": {
+      "type": "string",
+      "metadata": {
+        "description": "Current Timestamp"
+      },
+      "defaultValue": "[utcNow('yyyyMMddHHmmss')]"
+    }
+  },
+  "variables": {
+    "generatedRgName": "[if(equals(parameters('rgName'), ''), concat('CleanRoomRecoveryRG-', parameters('currentTime')), parameters('rgName'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2021-04-01",
+      "location": "[parameters('region_Cleanroom')]",
+      "name": "[variables('generatedRgName')]",
+      "properties": {}
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "nestedDeployment",
+      "resourceGroup": "[variables('generatedRgName')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups', variables('generatedRgName'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "https://raw.githubusercontent.com/Subarna579/arm-template/refs/heads/main/resources.json"
+        },
+        "parameters": {
+          "region_Cleanroom": {
+            "value": "[parameters('region_Cleanroom')]"
+          },
+          "virtualNetworks_Cleanroom_Infra_vNet_name": {
+            "value": "[parameters('virtualNetworks_Cleanroom_Infra_vNet_name')]"
+          },
+          "virtualNetworks_Cleanroom_Isolated_vNet_name": {
+            "value": "[parameters('virtualNetworks_Cleanroom_Isolated_vNet_name')]"
+          },
+          "storageAccounts_cvltcleanroomstorageacc_name": {
+            "value": "[parameters('storageAccounts_cvltcleanroomstorageacc_name')]"
+          },
+          "networkSecurityGroups_Cleanroom_Infra_NSG_name": {
+            "value": "[parameters('networkSecurityGroups_Cleanroom_Infra_NSG_name')]"
+          },
+          "networkSecurityGroups_Cleanroom_Isolated_NSG_name": {
+            "value": "[parameters('networkSecurityGroups_Cleanroom_Isolated_NSG_name')]"
+          },
+          "currentTime":{
+            "value": "[parameters('currentTime')]"
+          }
+        }
+      }
+    }
+  ]
+}
